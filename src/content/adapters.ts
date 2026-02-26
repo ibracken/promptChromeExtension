@@ -1,4 +1,10 @@
 export type EditableEl = HTMLTextAreaElement | HTMLInputElement | HTMLElement;
+const EXTENSION_ROOT_ID = "prompt-sidebar-root";
+
+function isInsideExtensionUI(el: Element | null) {
+  if (!el) return false;
+  return Boolean(el.closest?.(`#${EXTENSION_ROOT_ID}`));
+}
 
 function isEditable(el: Element | null): el is EditableEl {
   if (!el) return false;
@@ -44,22 +50,30 @@ function findClaudeInput() {
 
 export function getActiveInput(): EditableEl | null {
   const active = document.activeElement;
-  if (isEditable(active)) return active;
+  if (isEditable(active) && !isInsideExtensionUI(active)) return active;
   const selection = window.getSelection();
   const anchor = selection?.anchorNode as HTMLElement | null;
   if (anchor) {
     const parentEl =
       anchor.nodeType === Node.ELEMENT_NODE ? anchor : anchor.parentElement;
     const editable = parentEl?.closest?.("[contenteditable='true']");
-    if (editable && isEditable(editable)) return editable;
+    if (editable && isEditable(editable) && !isInsideExtensionUI(editable)) return editable;
   }
-  const gpt = findChatGPTInput();
-  if (gpt && isEditable(gpt)) return gpt;
-  const claude = findClaudeInput();
-  if (claude && isEditable(claude)) return claude;
+  const isClaudeHost = window.location.host.includes("claude.ai");
+  if (isClaudeHost) {
+    const claude = findClaudeInput();
+    if (claude && isEditable(claude) && !isInsideExtensionUI(claude)) return claude;
+    const gpt = findChatGPTInput();
+    if (gpt && isEditable(gpt) && !isInsideExtensionUI(gpt)) return gpt;
+  } else {
+    const gpt = findChatGPTInput();
+    if (gpt && isEditable(gpt) && !isInsideExtensionUI(gpt)) return gpt;
+    const claude = findClaudeInput();
+    if (claude && isEditable(claude) && !isInsideExtensionUI(claude)) return claude;
+  }
   const candidates = Array.from(
     document.querySelectorAll("textarea, input[type='text'], div[contenteditable='true']")
-  ).filter((el) => isEditable(el) && isVisible(el));
+  ).filter((el) => isEditable(el) && isVisible(el) && !isInsideExtensionUI(el));
   if (candidates.length === 0) return null;
   const scored = candidates
     .map((el) => {
@@ -111,11 +125,7 @@ function execInsertText(value: string) {
 }
 
 function setProseMirrorValue(el: HTMLElement, value: string) {
-  const p = el.querySelector("p");
-  if (p) {
-    p.textContent = value;
-    return;
-  }
+  // Replace the entire editor DOM to avoid leaving stale trailing blocks.
   el.innerHTML = `<p>${escapeHtml(value)}</p>`;
 }
 
@@ -131,13 +141,40 @@ function selectEditorContents(el: HTMLElement) {
   if (!selection) return;
   selection.removeAllRanges();
   const range = document.createRange();
-  const p = el.querySelector("p");
-  if (p && p.firstChild) {
-    range.selectNodeContents(p);
-  } else {
-    range.selectNodeContents(el);
-  }
+  range.selectNodeContents(el);
   selection.addRange(range);
+}
+
+function isChatGptProseMirror(el: HTMLElement) {
+  if (isClaudeEditor(el)) return false;
+  return (
+    el.classList.contains("ProseMirror") ||
+    el.classList.contains("tiptap") ||
+    el.id === "prompt-textarea"
+  );
+}
+
+function isClaudeEditor(el: HTMLElement) {
+  return (
+    el.getAttribute("data-testid") === "chat-input" ||
+    el.getAttribute("data-testid") === "composer-input"
+  );
+}
+
+function replaceViaSelection(el: HTMLElement, value: string) {
+  selectEditorContents(el);
+  el.dispatchEvent(
+    new InputEvent("beforeinput", {
+      bubbles: true,
+      cancelable: true,
+      inputType: "insertText",
+      data: value
+    })
+  );
+  const inserted = execInsertText(value);
+  if (!inserted) {
+    el.textContent = value;
+  }
 }
 
 export function writeValue(el: EditableEl | null, value: string) {
@@ -149,39 +186,17 @@ export function writeValue(el: EditableEl | null, value: string) {
   }
   if (el.isContentEditable) {
     el.focus();
-    if (
-      el.classList.contains("ProseMirror") ||
-      el.classList.contains("tiptap") ||
-      el.id === "prompt-textarea" ||
-      el.getAttribute("data-testid") === "chat-input"
-    ) {
-      selectEditorContents(el);
-      el.dispatchEvent(
-        new InputEvent("beforeinput", {
-          bubbles: true,
-          cancelable: true,
-          inputType: "deleteContent"
-        })
-      );
-      try {
-        document.execCommand("delete");
-      } catch {
-        // ignore
-      }
-      el.dispatchEvent(
-        new InputEvent("beforeinput", {
-          bubbles: true,
-          cancelable: true,
-          data: value,
-          inputType: "insertText"
-        })
-      );
-      const inserted = execInsertText(value);
-      if (!inserted) setProseMirrorValue(el, value);
+    if (isClaudeEditor(el)) {
+      // Avoid hard DOM rewrites in Claude; they can break the live editor state.
+      replaceViaSelection(el, value);
+    } else if (isChatGptProseMirror(el)) {
+      replaceViaSelection(el, value);
+      // Keep ProseMirror stable across host variants.
+      setProseMirrorValue(el, value);
       requestAnimationFrame(() => ensureValue(el, value));
       setTimeout(() => ensureValue(el, value), 50);
     } else {
-      el.textContent = value;
+      replaceViaSelection(el, value);
     }
     el.dispatchEvent(
       new InputEvent("input", { bubbles: true, data: value, inputType: "insertText" })

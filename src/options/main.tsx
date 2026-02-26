@@ -4,41 +4,55 @@ import "./styles.css";
 
 function Options() {
   const [premium, setPremium] = useState(false);
+  const [status, setStatus] = useState("Checking license...");
+
+  function checkLicense() {
+    chrome.runtime.sendMessage({ type: "GET_PREMIUM" }, (res) => {
+      if (chrome.runtime.lastError) {
+        setStatus("Unable to verify license right now.");
+        return;
+      }
+      const next = Boolean(res?.premium);
+      setPremium(next);
+      setStatus(res?.error || (next ? "Pro unlocked" : "Free tier"));
+    });
+  }
+
+  function openPayment() {
+    chrome.runtime.sendMessage({ type: "OPEN_PAYMENT" }, (res) => {
+      if (chrome.runtime.lastError) {
+        setStatus("Unable to open payment page right now.");
+        return;
+      }
+      if (res?.ok === false) {
+        setStatus(res.error || "Unable to open payment page right now.");
+        return;
+      }
+      setStatus("Payment page opened.");
+    });
+  }
 
   useEffect(() => {
-    chrome.storage.local.get(["premium"], (res) => {
-      setPremium(Boolean(res.premium));
-    });
+    checkLicense();
   }, []);
-
-  function togglePremium() {
-    const next = !premium;
-    setPremium(next);
-    chrome.storage.local.set({ premium: next });
-  }
 
   return (
     <div className="wrap">
-      <h1>Prompt Sidebar Settings</h1>
+      <h1>PromptFix Settings</h1>
       <div className="card">
         <div className="row">
-          <label htmlFor="premium-toggle">Premium (temporary manual unlock)</label>
-          <input
-            id="premium-toggle"
-            type="checkbox"
-            checked={premium}
-            onChange={togglePremium}
-          />
+          <strong>Current plan:</strong> {premium ? "Pro" : "Free"}
         </div>
-        <div className="hint">
-          Use this until ExtensionPay is wired. Disable for normal free-tier behavior.
-        </div>
+        <div className="hint">{status}</div>
       </div>
       <div className="card">
-        <button className="btn primary" onClick={() => window.open("https://extensionpay.com/") }>
+        <button className="btn primary" onClick={openPayment}>
           Upgrade to Pro
         </button>
-        <div className="hint">Opens ExtensionPay checkout.</div>
+        <button className="btn" onClick={checkLicense}>
+          Check License
+        </button>
+        <div className="hint">Use Upgrade to purchase/manage billing, then Check License.</div>
       </div>
     </div>
   );
@@ -46,3 +60,4 @@ function Options() {
 
 const root = createRoot(document.getElementById("root")!);
 root.render(<Options />);
+

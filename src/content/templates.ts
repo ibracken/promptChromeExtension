@@ -12,56 +12,78 @@ type Template = {
   build: (input: string) => string;
 };
 
+export type ModalAnswers = {
+  prompt: string;
+  context: string;
+};
+
+type ModalConfig = {
+  step1: string;
+  step2: string;
+  finalNote: string;
+  includeResume: boolean;
+};
+
+const modalConfigs: Record<TemplateKey, ModalConfig> = {
+  free_button1: {
+    step1: "Paste the question you want answered.",
+    step2: "Add context (audience, tone, constraints, or key details).",
+    finalNote: "",
+    includeResume: false
+  },
+  free_button2: {
+    step1: "What do you need to accomplish right now? (1-2 sentences)",
+    step2: "What is distracting you or making it hard to start?",
+    finalNote: "",
+    includeResume: false
+  },
+  paid_button1: {
+    step1: "Paste the application question you need to answer.",
+    step2: "Paste your resume text or key bullet points.",
+    finalNote: "",
+    includeResume: true
+  },
+  paid_button2: {
+    step1: "Paste the class or project deliverables you need to finish.",
+    step2: "Add your deadline, available time, and current progress.",
+    finalNote: "",
+    includeResume: false
+  },
+  paid_button3: {
+    step1: "What do you need to accomplish?",
+    step2: "Add constraints (deadline, success criteria, available time, and blockers).",
+    finalNote: "",
+    includeResume: false
+  },
+  paid_button4: {
+    step1: "Paste the AI-generated text you want rewritten.",
+    step2: "Add context (audience, tone targets, or details that must stay accurate).",
+    finalNote: "",
+    includeResume: false
+  }
+};
+
+const HUMANIZER_BAN_LIST =
+  "meticulous, em-dashes(--), passionate, most motivated, navigating, intersection of, complexities, realm, understanding, dive, shall, tailored, towards, underpins, everchanging, ever-evolving, the world of, not only, alright, embark, Journey, In today's digital age, hey, game changer, designed to enhance, it is advisable, daunting, when it comes to, in the realm of, amongst, unlock the secrets, unveil the secrets, and robust, diving, elevate, unleash, power, cutting-edge, rapidly, expanding, mastering, excels, harness, imagine, It's important to note, Delve into, Tapestry, Bustling, In summary, Remember that, Take a dive into, Navigating, Landscape, Testament, In the world of, Realm, Embark, Analogies to being a conductor or to music, Vibrant, Metropolis, Firstly, Moreover, Crucial, To consider, Essential, There are a few considerations, Ensure, It's essential to, Furthermore, Vital, Keen, Fancy, As a professional, Generally, Consequently, Importantly, Indeed, Thus, Alternatively, Notably, As well as, Despite, Essentially, Unless, Even though, In contrast, Although, In order to, Due to, Even if, Given that, Arguably, You may want to, On the other hand, As previously mentioned, It's worth noting that, To summarize, Ultimately, To put it simply, Promptly, Dive into, In today's digital era, Enhance, Emphasize, Revolutionize, Foster, Subsequently, Game changer, In conclusion";
+
 const templates: Record<TemplateKey, Template> = {
   free_button1: {
-    label: "Job App Response",
-    description: "Draft answers to open-ended job application questions",
+    label: "Your Voice",
+    description: "Answer questions in a natural, human tone",
     build: (input) =>
       [
-        "Write your response below excluding any of the following words and phrases: \"meticulous, navigating, complexities, realm, understanding, dive, shall, tailored, towards, underpins, everchanging, ever-evolving, the world of, not only, alright, embark, Journey, In today's digital age, hey, game changer, designed to enhance, it is advisable, daunting, when it comes to, in the realm of, amongst, unlock the secrets, unveil the secrets, and robust, diving, elevate, unleash, power, cutting-edge, rapidly, expanding, mastering, excels, harness, imagine, It's important to note, Delve into, Tapestry, Bustling, In summary, Remember that…, Take a dive into, Navigating, Landscape, Testament, In the world of, Realm, Embark, Analogies to being a conductor or to music, Vibrant, Metropolis, Firstly, Moreover, Crucial, To consider, Essential, There are a few considerations, Ensure, It's essential to, Furthermore, Vital, Keen, Fancy, As a professional, However, Therefore, Additionally, Specifically, Generally, Consequently, Importantly, Indeed, Thus, Alternatively, Notably, As well as, Despite, Essentially, While, Unless, Also, Even though, Because, In contrast, Although, In order to, Due to, Even if, Given that, Arguably, You may want to, On the other hand, As previously mentioned, It's worth noting that, To summarize, Ultimately, To put it simply, Promptly, Dive into, In today's digital era, Enhance, Emphasize, Revolutionize, Foster, Subsequently, Game changer, In conclusion\"",
-        "",
-        "You are helping draft answers to open-ended job application questions for your user: an early-career professional or college student.",
-        "",
-        "Inputs I will provide:",
-        "",
-        "The application question",
-        "My resume",
-        "",
-        "Your task is to generate a response that sounds like your user, not AI or corporate filler.",
-        "",
-        "Core rules:",
-        "",
-        "Treat the resume as the primary source of truth.",
-        "",
-        "Do not invent experience, scope, metrics, or ownership.",
-        "For “Why [Company]” prompts, reference exactly one concrete company-specific detail that is:",
-        "A product, system, internal platform, org, or technical constraint",
-        "Directly relevant to the target role",
-        "Not a mission statement, value, culture phrase, or marketing tagline",
-        "",
-        "If no such detail is known, do an internet search to find out. If you still can’t, write the text without the company detail and inform the user of this limitation.",
-        "",
-        "Include measurable outcomes only if they are explicitly present on the resume.",
-        "Ground every claim in specific action I took, referencing concrete systems, tools, or technical decisions",
-        "",
-        "Ensure the first and last few sentences are unique and interesting with more of a “yo” vibe, yet concretely tied to the role. This is the hook and it is absolutely critical that it isn't generic",
-        "",
-        "Almost always avoid vague traits or phrases such as “hardworking,” “passionate,” “most motivated,”, \"environment\", “intersection of,” or generic company praise.",
-        "",
-        "Tone and style:",
-        "",
-        "Write concisely. Hiring managers skim so aim for 120–180 words unless otherwise stated.",
-        "Prefer concrete descriptions over summaries.",
-        "Clear, easygoing, natural tone that’s still suitable for a job application.",
-        "Do not use em dashes or emojis unless explicitly asked.",
-        "",
-        "Clarification policy:",
-        "",
-        "Ask clarifying questions if information given is incomplete, or if you are unfamiliar with the company/resume items. Ensure clarifying questions are very easy for user to answer.",
-        "",
-        "Otherwise, make a best-effort answer using only verified resume information.",
-        "",
-        "User input:",
+        "First, search my drive for my writing. I might have random files in my drive so only use files that seem like they were written by me (a college student).",
+        "If my drive is not connected, ignore other instructions and tell me exactly how to connect it (Apps for ChatGPT, Connectors for Claude) and why it is needed. Do not proceed unless you confirm Drive search results. If you do not show citations from slurm_google_drive, stop",
+        "Pause and make sure you understand how I write.",
+        "Then answer the request below in my language.",
+        "Imitate my mechanics rather than summarize my work.",
+        "Avoid \"grand statements\".",
+        "Match my rhythm and patterns.",
+        "Do not include citations, file names, metadata, or source markers.",
+        "Constraints: Use at least one concrete number. Include one dry, understated aside. Use medium-short paragraphs. Avoid textbook tone and formal transitions. No em dashes.",
+        "Tone: Curious, slightly analytical, mildly amused. Sounds like someone explaining something on a whiteboard. Not a history essay. Not corporate. Not motivational.",
+        "Output: Final answer only.",
+        "User request:",
         input.trim()
       ].join("\n")
   },
@@ -70,93 +92,135 @@ const templates: Record<TemplateKey, Template> = {
     description: "Tiny start plan to beat procrastination",
     build: (input) =>
       [
-        "ROLE: Focus Coach 🎯",
-        "Your job is to help me start, not finish.",
-        "TASK: Break my task into:",
-        "▶ a 5-minute start that requires zero thinking",
-        "▶ the next smallest possible step",
-        "▶ a clear stopping point so I don’t overwork",
-        "CONSTRAINTS:",
-        "• No theory, psychology, or explanations",
-        "• Use only concrete actions",
-        "• Assume I’m procrastinating and low-energy",
-        "• Optimize for momentum, not perfection",
-        "• Keep it under 120 words",
-        "OUTPUT FORMAT:",
-        "▶ 5-minute start",
-        "▶ Next tiny step",
-        "▶ Clear stopping point",
-        "⚠️ Unknowns (only if they block action)",
-        "CLARIFYING RULE: Ask one clarifying question only if action is impossible without it. Otherwise, make a reasonable default assumption and proceed.",
-        "CONTEXT:",
+        "ROLE: David Goggins-Style Accountability Coach",
+        "Channel the intensity, ownership, and no-excuses mindset of David Goggins.",
+        "Your job is to get me moving immediately.",
+        "I will give you a task.",
+        "Reply in under 120 words.",
+        "Tone: Relentless. Confrontational. No comfort. No corporate language.",
+        "",
+        "Rules:",
+        "- Assume I am avoiding the work.",
+        "- Call out excuses directly.",
+        "- No theory. No psychology. No explanations.",
+        "- Short sentences.",
+        "- Make me start within 60 seconds.",
+        "- Prioritize discipline over feelings.",
+        "WHAT NEEDS TO BE ACCOMPLISHED:",
         input.trim()
       ].join("\n")
   },
   paid_button1: {
-    label: "Paid Button 1",
-    description: "Job hunt: resume bullet",
+    label: "Job Application",
+    description: "Draft answers to open-ended job application questions",
     build: (input) =>
       [
-        "You are a career coach.",
-        "Task: Turn the input into a strong resume bullet.",
-        "Constraints:",
-        "- Use action verbs.",
-        "- Quantify impact when possible.",
-        "- Keep it to 1 sentence.",
-        "Output format:",
-        "- Final bullet",
-        "- 2 alternate versions",
-        "Input:",
+        "First, learn my writing voice from my Drive files.",
+        "Use only files that appear to be written by me, and ignore template-generated/copied text.",
+        "If Drive is not connected, stop and tell me exactly how to connect it (ChatGPT: Apps, Claude: Connectors), then explain in one sentence why voice matching requires it.",
+        "",
+        "Resume check (required):",
+        "Before writing, verify resume/context is populated.",
+        "If missing, empty, placeholder text, or \"none provided\", output only a short request asking for my resume.",
+        "",
+        "Company research (required):",
+        "Research the target company before drafting.",
+        "Use at least one concrete company-specific detail relevant to this role (product, system, platform, org, or technical constraint).",
+        "Do not use mission statements, generic culture phrases, or marketing taglines as the detail.",
+        "If no reliable detail is found, say so briefly and continue with the strongest role-relevant answer possible.",
+        "",
+        "Write the response to the job application question below.",
+        "Voice target: hybrid of my Drive voice (primary) and a toned-down Randall Munroe from xkcd and What If explanatory clarity (secondary).",
+        "If there is conflict, my Drive voice wins.",
+        "",
+        "Rules:",
+        "Lead with one specific detail, moment, or decision.",
+        "Show ownership and judgment through concrete actions.",
+        "Use outcomes only if supported by resume/context.",
+        "No invented experience, metrics, tools, or responsibilities.",
+        "No corporate filler, buzzwords, motivational language, textbook transitions, or em dashes.",
+        "Medium-short paragraphs, skimmable and confident.",
+        "At most one understated aside.",
+        "Ask one short clarifying question only if required to avoid a wrong answer.",
+        "",
+        "Length: 140-220 words unless otherwise requested.",
+        "Output: Final answer only.",
+        "",
+        "Application question and resume/context:",
         input.trim()
       ].join("\n")
   },
   paid_button2: {
-    label: "Paid Button 2",
-    description: "Job hunt: cover letter",
+    label: "Witty Explainer",
+    description: "Answer questions in a witty, natural human voice",
     build: (input) =>
       [
-        "You are a hiring manager.",
-        "Task: Draft a tailored cover letter based on the input.",
+        "Answer the question in the style of Randall Munroe from xkcd and What If.",
         "Constraints:",
-        "- 3 short paragraphs.",
-        "- Mention role fit and impact.",
-        "Output format:",
-        "- Cover letter",
-        "Input:",
+        "Use at least one concrete number.",
+        "Include one dry, understated aside.",
+        "Use medium-short paragraphs.",
+        "Avoid textbook tone and formal transitions.",
+        "No em dashes.",
+        "Keep under 300 words.",
+        "Tone: Curious, slightly analytical, mildly amused.",
+        "Sounds like someone explaining something on a whiteboard.",
+        "Not a history essay.",
+        "Not corporate.",
+        "Not motivational.",
+        "Output: Final answer only.",
+        "Question:",
         input.trim()
       ].join("\n")
   },
   paid_button3: {
-    label: "Paid Button 3",
-    description: "Writing: essay structure",
+    label: "Complicated Task",
+    description: "Clarify one objective, then produce a concise step-by-step plan",
     build: (input) =>
       [
-        "You are an academic writing tutor.",
-        "Task: Create a structured outline for the essay prompt below.",
-        "Constraints:",
-        "- Clear thesis statement.",
-        "- 3 body sections with evidence ideas.",
-        "Output format:",
-        "- Thesis",
-        "- Outline",
-        "- Suggested sources",
-        "Essay prompt:",
+        "You are my Execution Coach.",
+        "",
+        "Start by asking what I need to accomplish.",
+        "Ask only one clarification question at a time until the objective is crystal clear and measurable.",
+        "Do not proceed until I confirm the objective.",
+        "",
+        "Once confirmed, output only:",
+        "- A concise step-by-step execution plan",
+        "- Direct instruction style (\"Do X, then Y\")",
+        "- Exact deliverables, time blocks, and stopping points",
+        "- Assumptions only if needed",
+        "- Follow-up questions only if required to avoid a wrong plan",
+        "",
+        "Rules:",
+        "- Be concise and practical.",
+        "- Avoid repetition and generic background.",
+        "- No extra commentary.",
+        "- Default to the minimum words needed to be useful.",
+        "",
+        "My objective and constraints:",
         input.trim()
       ].join("\n")
   },
   paid_button4: {
-    label: "Paid Button 4",
-    description: "Writing: summary",
+    label: "Humanizer",
+    description: "Rewrite AI text to sound natural in Randall Munroe style",
     build: (input) =>
       [
-        "You are a precise summarizer.",
-        "Task: Summarize the text below.",
+        "Rewrite the text below in the style of Randall Munroe from xkcd and What If.",
+        "Goal: keep meaning and facts intact while making the writing sound natural, clear, and human.",
         "Constraints:",
-        "- 5 bullet points max.",
-        "- Preserve key facts.",
+        "Use short paragraphs.",
+        "Keep at least one concrete number if one exists in the original.",
+        "You may include one dry, understated aside.",
+        "Avoid textbook tone and formal transitions.",
+        "No em dashes.",
+        "Do not invent facts or change claims.",
+        "If anything seems factually wrong, flag it briefly after the rewrite.",
         "Output format:",
-        "- Summary bullets",
-        "Input:",
+        "Rewritten text first.",
+        "Then a short list called \"Fact checks\" only if needed.",
+        "",
+        "Text to rewrite:",
         input.trim()
       ].join("\n")
   }
@@ -169,6 +233,43 @@ export const paidButtons: TemplateKey[] = [
   "paid_button3",
   "paid_button4"
 ];
+
+export function getModalConfig(key: TemplateKey) {
+  return modalConfigs[key];
+}
+
+export function buildModalInput(key: TemplateKey, answers: ModalAnswers) {
+  if (key === "paid_button1") {
+    const parts = [
+      "Application question:",
+      answers.prompt.trim(),
+      "",
+      "Resume/context:",
+      answers.context.trim() || "(none provided)"
+    ];
+    return parts.join("\n");
+  }
+  if (key === "free_button2") {
+    const parts = [
+      answers.prompt.trim(),
+      "",
+      "ADDITIONAL CONTEXT: What is distracting the user or making it hard for them to start?",
+      answers.context.trim() || "(none provided)"
+    ];
+    return parts.join("\n");
+  }
+  const parts = [
+    "Prompt:",
+    answers.prompt.trim(),
+    "",
+    "Additional context:",
+    answers.context.trim() || "(none provided)"
+  ];
+  if (modalConfigs[key].includeResume) {
+    parts.push("", "Resume:", "(Upload or paste after this prompt.)");
+  }
+  return parts.join("\n");
+}
 
 export function buildPrompt(key: TemplateKey, input: string) {
   return templates[key].build(input);

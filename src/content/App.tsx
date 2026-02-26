@@ -4,11 +4,13 @@ import {
   freeButtons,
   paidButtons,
   getLabel,
-  TemplateKey
+  TemplateKey,
+  getModalConfig,
+  buildModalInput
 } from "./templates";
 import { getActiveInput, readValue, writeValue } from "./adapters";
 
-const DEFAULT_POS = { x: 80, y: 120 };
+const DEFAULT_POS = { x: 16, y: 16 };
 
 type DragState = {
   offsetX: number;
@@ -24,9 +26,13 @@ function clamp(value: number, min: number, max: number) {
 
 export default function App() {
   const [isOpen, setIsOpen] = useState(true);
-  const [isPremium, setIsPremium] = useState(false);
   const [status, setStatus] = useState("Free tier");
   const [pos, setPos] = useState(DEFAULT_POS);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalStep, setModalStep] = useState(0);
+  const [modalKey, setModalKey] = useState<TemplateKey | null>(null);
+  const [modalPrompt, setModalPrompt] = useState("");
+  const [modalContext, setModalContext] = useState("");
   const panelRef = useRef<HTMLDivElement | null>(null);
   const dragRef = useRef<DragState | null>(null);
   const dragMovedRef = useRef(false);
@@ -35,21 +41,21 @@ export default function App() {
   const allButtons = useMemo(() => {
     return [
       ...freeButtons.map((key) => ({ key, locked: false })),
-      ...paidButtons.map((key) => ({ key, locked: !isPremium }))
+      ...paidButtons.map((key) => ({ key, locked: false }))
     ];
-  }, [isPremium]);
+  }, []);
 
   function readPrompt() {
     const el = getActiveInput();
     return readValue(el);
   }
 
-  function handleApply(key: TemplateKey) {
+  function handleApply(key: TemplateKey, overrideInput?: string) {
     const el = getActiveInput();
     if (el) {
       el.focus();
     }
-    const input = readPrompt();
+    const input = overrideInput ?? readPrompt();
     if (!input.trim()) {
       setStatus("Type a prompt first.");
       return;
@@ -64,24 +70,29 @@ export default function App() {
   }
 
   function handleUpgrade() {
-    window.open("https://extensionpay.com/");
-  }
-
-  function handleCheck() {
-    chrome.storage.local.get(["premium"], (res) => {
-      const next = Boolean(res.premium);
-      setIsPremium(next);
-      setStatus(next ? "Pro unlocked" : "Free tier");
+    chrome.runtime.sendMessage({ type: "OPEN_PAYMENT" }, (res) => {
+      if (chrome.runtime.lastError) {
+        setStatus("Unable to open payment page right now.");
+        return;
+      }
+      if (res?.ok === false) {
+        setStatus(res.error || "Unable to open payment page right now.");
+        return;
+      }
+      setStatus("Payment page opened.");
     });
   }
 
-  useEffect(() => {
-    const width = panelRef.current?.offsetWidth ?? 300;
-    const height = panelRef.current?.offsetHeight ?? 520;
-    const nextX = Math.max(0, Math.round((window.innerWidth - width) / 2));
-    const nextY = Math.max(0, Math.round((window.innerHeight - height) / 2));
-    setPos({ x: nextX, y: nextY });
-  }, []);
+  function handleCheck() {
+    chrome.runtime.sendMessage({ type: "GET_PREMIUM" }, (res) => {
+      if (chrome.runtime.lastError) {
+        setStatus("Unable to verify license right now.");
+        return;
+      }
+      const next = Boolean(res?.premium);
+      setStatus(res?.error || (next ? "Pro unlocked" : "Free tier"));
+    });
+  }
 
   function startDrag(e: React.PointerEvent) {
     dragMovedRef.current = false;
@@ -133,6 +144,10 @@ export default function App() {
     };
   }, []);
 
+  useEffect(() => {
+    handleCheck();
+  }, []);
+
   function toggleOpen() {
     if (dragMovedRef.current) {
       dragMovedRef.current = false;
@@ -141,7 +156,41 @@ export default function App() {
     setIsOpen((v) => !v);
   }
 
+  function openModal(key: TemplateKey) {
+    setModalKey(key);
+    setModalPrompt("");
+    setModalContext("");
+    setModalStep(0);
+    setModalOpen(true);
+  }
+
+  function closeModal() {
+    setModalOpen(false);
+    setModalKey(null);
+    setModalStep(0);
+  }
+
+  function handleModalNext() {
+    if (modalStep === 0 && !modalPrompt.trim()) {
+      return;
+    }
+    setModalStep((step) => Math.min(maxModalStep, step + 1));
+  }
+
+  function handleModalApply() {
+    if (!modalKey) return;
+    const combined = buildModalInput(modalKey, {
+      prompt: modalPrompt,
+      context: modalContext
+    });
+    handleApply(modalKey, combined);
+    closeModal();
+  }
+
   const host = window.location.host;
+  const modalConfig = modalKey ? getModalConfig(modalKey) : null;
+  const hasFinalNote = Boolean(modalConfig?.finalNote.trim());
+  const maxModalStep = hasFinalNote ? 2 : 1;
   const theme =
     host.includes("claude.ai") ? "psx-theme-claude" : "psx-theme-chatgpt";
 
@@ -163,9 +212,15 @@ export default function App() {
           className="psx-header"
           onPointerDown={startDrag}
         >
-          <div className="psx-title">Prompt Sidebar</div>
-          <button className="psx-close" onClick={() => setIsOpen(false)}>
-            Minimize Sidebar
+          <div className="psx-title">PromptFix</div>
+          <button
+            className="psx-close"
+            onClick={() => {
+              closeModal();
+              setIsOpen(false);
+            }}
+          >
+            Minimize
           </button>
         </div>
 
@@ -177,7 +232,9 @@ export default function App() {
                 <button
                   key={key}
                   className={`psx-btn ${locked ? "psx-locked" : ""}`}
-                  onClick={() => (locked ? setStatus("Upgrade to unlock.") : handleApply(key))}
+                  onClick={() =>
+                    locked ? setStatus("Upgrade to unlock.") : openModal(key)
+                  }
                 >
                   {getLabel(key)}
                 </button>
@@ -198,6 +255,66 @@ export default function App() {
             </div>
           </div>
         </div>
+        {modalOpen && modalKey && (
+          <div className="psx-modal-backdrop">
+            <div className="psx-modal">
+              <div className="psx-modal-header">
+                <div className="psx-modal-title">{getLabel(modalKey)}</div>
+                <button className="psx-modal-close" onClick={closeModal}>
+                  Cancel
+                </button>
+              </div>
+              <div className="psx-modal-body">
+                {modalStep === 0 && (
+                  <>
+                    <div className="psx-modal-question">
+                      {modalConfig?.step1}
+                    </div>
+                    <textarea
+                      className="psx-modal-input"
+                      placeholder="Type here..."
+                      value={modalPrompt}
+                      onChange={(e) => setModalPrompt(e.target.value)}
+                    />
+                  </>
+                )}
+                {modalStep === 1 && (
+                  <>
+                    <div className="psx-modal-question">
+                      {modalConfig?.step2}
+                    </div>
+                    <textarea
+                      className="psx-modal-input"
+                      placeholder="Optional but helpful..."
+                      value={modalContext}
+                      onChange={(e) => setModalContext(e.target.value)}
+                    />
+                  </>
+                )}
+                {modalStep === 2 && hasFinalNote && (
+                  <div className="psx-modal-reminder">
+                    {modalConfig?.finalNote}
+                  </div>
+                )}
+              </div>
+              <div className="psx-modal-actions">
+                {modalStep < maxModalStep ? (
+                  <button
+                    className="psx-btn psx-primary"
+                    onClick={handleModalNext}
+                    disabled={modalStep === 0 && !modalPrompt.trim()}
+                  >
+                    Next
+                  </button>
+                ) : (
+                  <button className="psx-btn psx-primary" onClick={handleModalApply}>
+                    Apply Prompt
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

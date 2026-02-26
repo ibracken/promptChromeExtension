@@ -4,7 +4,7 @@ import { crx } from "@crxjs/vite-plugin";
 
 const manifest = {
   manifest_version: 3,
-  name: "Prompt Sidebar Extension",
+  name: "PromptFix",
   version: "0.1.0",
   description: "Upgrade prompts inside ChatGPT and Claude with one click.",
   permissions: ["storage"],
@@ -28,7 +28,7 @@ const manifest = {
     }
   ],
   action: {
-    default_title: "Prompt Sidebar",
+    default_title: "PromptFix",
     default_popup: "src/popup/index.html"
   },
   options_page: "src/options/index.html",

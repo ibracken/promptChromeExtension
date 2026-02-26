@@ -33,10 +33,11 @@ function ensureRoot() {
 }
 
 const host = ensureRoot();
-const shadow = host.attachShadow({ mode: "open" });
+const rootNode: ShadowRoot | HTMLElement = host;
+
 const styleEl = document.createElement("style");
 styleEl.textContent = styles;
-shadow.appendChild(styleEl);
+rootNode.appendChild(styleEl);
 
 const container = document.createElement("div");
 container.style.position = "fixed";
@@ -45,7 +46,7 @@ container.style.top = "0";
 container.style.width = "0";
 container.style.height = "0";
 container.style.pointerEvents = "auto";
-shadow.appendChild(container);
+rootNode.appendChild(container);
 
 const root = createRoot(container);
 root.render(<App />);

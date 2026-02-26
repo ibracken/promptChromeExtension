@@ -97,6 +97,94 @@
   gap: 12px;
 }
 
+.psx-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 18px;
+  z-index: 5;
+}
+
+.psx-modal {
+  width: min(92%, 320px);
+  background: #ffffff;
+  border-radius: 16px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 20px 48px rgba(15, 23, 42, 0.18);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.psx-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.psx-modal-title {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.psx-modal-close {
+  background: transparent;
+  border: 1px solid #e5e7eb;
+  color: inherit;
+  border-radius: 10px;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.psx-modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.psx-modal-question {
+  font-size: 12px;
+  color: #4b5563;
+  font-weight: 600;
+}
+
+.psx-modal-input {
+  min-height: 88px;
+  resize: vertical;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  padding: 8px 10px;
+  font-size: 12px;
+  font-family: inherit;
+}
+
+.psx-modal-reminder {
+  font-size: 12px;
+  color: #1f2937;
+  background: #f8fafc;
+  border-radius: 12px;
+  padding: 10px 12px;
+  border: 1px solid #e5e7eb;
+  font-weight: 600;
+}
+
+.psx-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.psx-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .psx-section {
   border: 1px solid #e5e5ea;
   border-radius: 12px;
@@ -205,6 +293,16 @@
   color: #ffffff;
 }
 
+.psx-theme-chatgpt .psx-modal {
+  background: #ffffff;
+  border-color: #e5e7eb;
+}
+
+.psx-theme-chatgpt .psx-modal-reminder {
+  background: #f8fafc;
+  border-color: #e5e7eb;
+}
+
 
 .psx-theme-claude {
   background: rgba(247, 244, 239, 0.78);
@@ -248,6 +346,16 @@
 .psx-theme-claude .psx-close {
   background: #111111;
   color: #f7f4ef;
+}
+
+.psx-theme-claude .psx-modal {
+  background: #ffffff;
+  border-color: #e6ded4;
+}
+
+.psx-theme-claude .psx-modal-reminder {
+  background: #fbf8f3;
+  border-color: #e6ded4;
 }
 
 
