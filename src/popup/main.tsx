@@ -3,7 +3,7 @@ import { createRoot } from "react-dom/client";
 import "./styles.css";
 
 function Popup() {
-  function openPayment() {
+  function openSupport() {
     chrome.runtime.sendMessage({ type: "OPEN_PAYMENT" });
   }
 
@@ -14,8 +14,8 @@ function Popup() {
       <button className="btn" onClick={() => chrome.runtime.openOptionsPage()}>
         Settings
       </button>
-      <button className="btn primary" onClick={openPayment}>
-        Upgrade to Pro
+      <button className="btn primary" onClick={openSupport}>
+        Support PromptFix
       </button>
     </div>
   );

@@ -1,6 +1,7 @@
 export type TemplateKey =
   | "free_button1"
   | "free_button2"
+  | "free_button3"
   | "paid_button1"
   | "paid_button2"
   | "paid_button3"
@@ -34,6 +35,12 @@ const modalConfigs: Record<TemplateKey, ModalConfig> = {
   free_button2: {
     step1: "What do you need to accomplish right now? (1-2 sentences)",
     step2: "What is distracting you or making it hard to start?",
+    finalNote: "",
+    includeResume: false
+  },
+  free_button3: {
+    step1: "Paste the topic, explanation, or question that feels too complex.",
+    step2: "Add context (your level, what is confusing, or what kind of example would help).",
     finalNote: "",
     includeResume: false
   },
@@ -72,11 +79,19 @@ const templates: Record<TemplateKey, Template> = {
     description: "Answer questions in a natural, human tone",
     build: (input) =>
       [
-        "First, search my drive for my writing. I might have random files in my drive so only use files that seem like they were written by me (a college student).",
-        "If my drive is not connected, ignore other instructions and tell me exactly how to connect it (Apps for ChatGPT, Connectors for Claude) and why it is needed. Do not proceed unless you confirm Drive search results. If you do not show citations from slurm_google_drive, stop",
+        "SYSTEM / EXECUTION PROMPT",
+        "If any required step is skipped, your entire output must explain why it failed.",
+        "First, search my Drive for writing samples. Specifically those with keywords: 'notes, essay, application'",
+        "Use only files that appear to be written by me (college-student voice), and ignore template-generated/copied text.",
+        "",
+        "Drive check (required):",
+        "If Drive is not connected, stop and tell me exactly how to connect it (ChatGPT: Apps, Claude: Connectors), then explain in one sentence why voice matching requires Drive files.",
+        "Do not proceed unless Drive search results are confirmed.",
+        "If you do not show citations from slurm_google_drive, stop.",
+        "",
         "Pause and make sure you understand how I write.",
-        "Then answer the request below in my language.",
-        "Imitate my mechanics rather than summarize my work.",
+        "Then answer the request below in my language. (required)",
+        "Imitate my mechanics and sentence structure rather than summarize my work.",
         "Avoid \"grand statements\".",
         "Match my rhythm and patterns.",
         "Do not include citations, file names, metadata, or source markers.",
@@ -110,13 +125,39 @@ const templates: Record<TemplateKey, Template> = {
         input.trim()
       ].join("\n")
   },
+  free_button3: {
+    label: "Simplifier",
+    description: "Break down a hard topic into a plain-English example",
+    build: (input) =>
+      [
+        "You are a clear teacher.",
+        "Explain the topic below for someone who is new to it.",
+        "",
+        "Output rules:",
+        "- Start with a 1-2 sentence plain-English summary.",
+        "- Then give one simple everyday example or analogy.",
+        "- Then explain the idea step by step in short sections.",
+        "- Define jargon only if it is necessary.",
+        "- End with a short 'why this matters' line.",
+        "- If the input is vague, make the best reasonable interpretation and say what you assumed.",
+        "- Keep the tone calm, direct, and not childish.",
+        "- Avoid fluff, formal transitions, and unnecessary complexity.",
+        "",
+        "Topic and context:",
+        input.trim()
+      ].join("\n")
+  },
   paid_button1: {
     label: "Job Application",
     description: "Draft answers to open-ended job application questions",
     build: (input) =>
       [
-        "First, learn my writing voice from my Drive files.",
+        "SYSTEM / EXECUTION PROMPT",
+        "If any required step is skipped, your entire output must explain why it failed",
+        "First, learn my writing voice from my Drive files. Specifically those with keywords: 'notes, essay, application'",
         "Use only files that appear to be written by me, and ignore template-generated/copied text.",
+        "",
+        "Drive check (required):",
         "If Drive is not connected, stop and tell me exactly how to connect it (ChatGPT: Apps, Claude: Connectors), then explain in one sentence why voice matching requires it.",
         "",
         "Resume check (required):",
@@ -145,8 +186,6 @@ const templates: Record<TemplateKey, Template> = {
         "",
         "Length: 140-220 words unless otherwise requested.",
         "Output: Final answer only.",
-        "",
-        "Application question and resume/context:",
         input.trim()
       ].join("\n")
   },
@@ -226,10 +265,11 @@ const templates: Record<TemplateKey, Template> = {
   }
 };
 
-export const freeButtons: TemplateKey[] = ["free_button1", "free_button2"];
+export const freeButtons: TemplateKey[] = ["free_button1", "paid_button2"];
 export const paidButtons: TemplateKey[] = [
+  "free_button2",
+  "free_button3",
   "paid_button1",
-  "paid_button2",
   "paid_button3",
   "paid_button4"
 ];
@@ -254,6 +294,16 @@ export function buildModalInput(key: TemplateKey, answers: ModalAnswers) {
       answers.prompt.trim(),
       "",
       "ADDITIONAL CONTEXT: What is distracting the user or making it hard for them to start?",
+      answers.context.trim() || "(none provided)"
+    ];
+    return parts.join("\n");
+  }
+  if (key === "free_button3") {
+    const parts = [
+      "Complex topic or question:",
+      answers.prompt.trim(),
+      "",
+      "Learner context:",
       answers.context.trim() || "(none provided)"
     ];
     return parts.join("\n");

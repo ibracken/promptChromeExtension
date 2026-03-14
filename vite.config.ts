@@ -5,7 +5,7 @@ import { crx } from "@crxjs/vite-plugin";
 const manifest = {
   manifest_version: 3,
   name: "PromptFix",
-  version: "0.1.0",
+  version: "0.1.4",
   description: "Upgrade prompts inside ChatGPT and Claude with one click.",
   permissions: ["storage"],
   host_permissions: [
@@ -45,3 +45,5 @@ export default defineConfig({
     target: "es2020"
   }
 });
+
+

@@ -21,14 +21,14 @@ function Options() {
   function openPayment() {
     chrome.runtime.sendMessage({ type: "OPEN_PAYMENT" }, (res) => {
       if (chrome.runtime.lastError) {
-        setStatus("Unable to open payment page right now.");
+        setStatus("Unable to open support page right now.");
         return;
       }
       if (res?.ok === false) {
-        setStatus(res.error || "Unable to open payment page right now.");
+        setStatus(res.error || "Unable to open support page right now.");
         return;
       }
-      setStatus("Payment page opened.");
+      setStatus("Support page opened.");
     });
   }
 
@@ -47,12 +47,12 @@ function Options() {
       </div>
       <div className="card">
         <button className="btn primary" onClick={openPayment}>
-          Upgrade to Pro
+          Support PromptFix
         </button>
         <button className="btn" onClick={checkLicense}>
           Check License
         </button>
-        <div className="hint">Use Upgrade to purchase/manage billing, then Check License.</div>
+        <div className="hint">Use support to help fund development. Check License refreshes your current plan.</div>
       </div>
     </div>
   );

@@ -1,9 +1,13 @@
+:root {
+  color-scheme: light dark;
+}
+
 body {
   margin: 0;
-  font-family: "Space Grotesk", "Sora", "Segoe UI", sans-serif;
-  background: #0b1220;
-  color: #f9fafb;
-  min-width: 260px;
+  font-family: "Segoe UI", Inter, "Helvetica Neue", Arial, sans-serif;
+  min-width: 270px;
+  background: #f5f5f7;
+  color: #1c1c1e;
 }
 
 .popup {
@@ -14,27 +18,60 @@ body {
 }
 
 .title {
+  font-size: 15px;
   font-weight: 700;
-  font-size: 16px;
 }
 
 .subtitle {
   font-size: 12px;
-  color: #94a3b8;
+  color: #6e6e73;
 }
 
 .btn {
-  padding: 10px;
-  border-radius: 8px;
-  border: 1px solid #1f2937;
-  background: #0f172a;
-  color: #e2e8f0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #d2d2d7;
+  background: #ffffff;
+  color: #1c1c1e;
+  font-size: 12px;
+  font-weight: 600;
   cursor: pointer;
 }
 
+.btn:hover {
+  border-color: #b8b8be;
+}
+
 .btn.primary {
-  background: linear-gradient(90deg, #f59e0b 0%, #f97316 100%);
-  border-color: #ea580c;
-  color: #111827;
+  background: #1c1c1e;
+  border-color: #1c1c1e;
+  color: #f2f2f7;
   font-weight: 700;
+}
+
+@media (prefers-color-scheme: dark) {
+  body {
+    background: #111827;
+    color: #e5e7eb;
+  }
+
+  .subtitle {
+    color: #94a3b8;
+  }
+
+  .btn {
+    background: #1f2937;
+    border-color: #374151;
+    color: #e5e7eb;
+  }
+
+  .btn:hover {
+    border-color: #4b5563;
+  }
+
+  .btn.primary {
+    background: #334155;
+    border-color: #475569;
+    color: #f8fafc;
+  }
 }
