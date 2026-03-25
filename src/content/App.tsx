@@ -1,10 +1,11 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import scenariosMarkdown from "../../scenarios.md?raw";
 import {
   buildPrompt,
-  freeButtons,
-  paidButtons,
-  getLabel,
-  TemplateKey,
+  freeVoiceIds,
+  paidVoiceIds,
+  getVoice,
+  VoiceId,
   getModalConfig,
   buildModalInput
 } from "./templates";
@@ -21,11 +22,20 @@ type DragState = {
 };
 
 const howToUseSteps = [
-  "Open PromptFix and choose a tool button.",
-  "Fill in the short modal prompts so the generated prompt has enough context.",
-  "Click Apply Prompt to replace the current composer text.",
-  "Review the prompt, tweak it if needed, then send it yourself."
+  "Pick a voice.",
+  "Paste a ridiculous scenario or use the Scenarios button.",
+  "Click Apply Prompt.",
+  "Send it."
 ];
+
+function parseScenarioList(markdown: string) {
+  return markdown
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter((line) => !line.startsWith("#"))
+    .map((line) => line.replace(/^[-*]\s+/, "").trim())
+    .filter(Boolean);
+}
 
 function clamp(value: number, min: number, max: number) {
   return Math.max(min, Math.min(max, value));
@@ -68,7 +78,7 @@ export default function App() {
   const [isOpen, setIsOpen] = useState(true);
   const [isDark, setIsDark] = useState(() => detectHostDarkMode());
   const [isPremium, setIsPremium] = useState(false);
-  const [status, setStatus] = useState("Free tier");
+  const [status, setStatus] = useState("Free voice ready");
   const [pos, setPos] = useState(() => {
     const width = Math.min(Math.max(window.innerWidth * 0.26, 260), 380);
     const margin = 16;
@@ -78,39 +88,41 @@ export default function App() {
     };
   });
   const [modalOpen, setModalOpen] = useState(false);
-  const [modalStep, setModalStep] = useState(0);
-  const [modalKey, setModalKey] = useState<TemplateKey | null>(null);
-  const [modalPrompt, setModalPrompt] = useState("");
-  const [modalContext, setModalContext] = useState("");
+  const [modalVoiceId, setModalVoiceId] = useState<VoiceId | null>(null);
+  const [modalScenario, setModalScenario] = useState("");
+  const [scenarioPickerOpen, setScenarioPickerOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
+  const [resumeModalAfterHelp, setResumeModalAfterHelp] = useState(false);
   const panelRef = useRef<HTMLDivElement | null>(null);
   const dragRef = useRef<DragState | null>(null);
   const dragMovedRef = useRef(false);
   const rafRef = useRef<number | null>(null);
 
-  const allButtons = useMemo(() => {
+  const allVoices = useMemo(() => {
     return [
-      ...freeButtons.map((key) => ({ key, locked: false })),
-      ...paidButtons.map((key) => ({ key, locked: !isPremium }))
+      ...freeVoiceIds.map((id) => ({ voice: getVoice(id), locked: false })),
+      ...paidVoiceIds.map((id) => ({ voice: getVoice(id), locked: false }))
     ];
-  }, [isPremium]);
+  }, []);
+
+  const scenarioPresets = useMemo(() => parseScenarioList(scenariosMarkdown), []);
 
   function readPrompt() {
     const el = getActiveInput();
     return readValue(el);
   }
 
-  function handleApply(key: TemplateKey, overrideInput?: string) {
+  function handleApply(id: VoiceId, overrideInput?: string) {
     const el = getActiveInput();
     if (el) {
       el.focus();
     }
     const input = overrideInput ?? readPrompt();
     if (!input.trim()) {
-      setStatus("Type a prompt first.");
+      setStatus("Add a scenario first.");
       return;
     }
-    const upgraded = buildPrompt(key, input);
+    const upgraded = buildPrompt(id, input);
     if (!el) {
       setStatus("Click inside the chat box, then try again.");
       return;
@@ -129,7 +141,7 @@ export default function App() {
         setStatus(res.error || "Unable to open unlock page right now.");
         return;
       }
-      setStatus("Unlock page opened.");
+      setStatus("Voice unlock page opened.");
     });
   }
 
@@ -142,7 +154,7 @@ export default function App() {
       }
       const next = Boolean(res?.premium);
       setIsPremium(next);
-      setStatus(res?.error || (next ? "Pro unlocked" : "Free tier"));
+      setStatus(res?.error || (next ? "All voices unlocked" : "Free voice ready"));
     });
   }
 
@@ -246,28 +258,33 @@ export default function App() {
     setIsOpen(nextOpen);
   }
 
-  function openModal(key: TemplateKey) {
+  function openModal(id: VoiceId) {
     setHelpOpen(false);
-    setModalKey(key);
-    setModalPrompt("");
-    setModalContext("");
-    setModalStep(0);
+    setModalVoiceId(id);
+    setModalScenario("");
+    setScenarioPickerOpen(false);
     setModalOpen(true);
   }
 
   function closeModal() {
     setModalOpen(false);
-    setModalKey(null);
-    setModalStep(0);
+    setModalVoiceId(null);
+    setScenarioPickerOpen(false);
   }
 
   function openHelp() {
-    closeModal();
+    const shouldResume = modalOpen;
+    setResumeModalAfterHelp(shouldResume);
+    setModalOpen(false);
     setHelpOpen(true);
   }
 
   function closeHelp() {
     setHelpOpen(false);
+    if (resumeModalAfterHelp && modalVoiceId) {
+      setModalOpen(true);
+    }
+    setResumeModalAfterHelp(false);
   }
 
   useEffect(() => {
@@ -291,27 +308,34 @@ export default function App() {
     };
   }, [isOpen]);
 
-  function handleModalNext() {
-    if (modalStep === 0 && !modalPrompt.trim()) {
-      return;
-    }
-    setModalStep((step) => Math.min(maxModalStep, step + 1));
-  }
-
   function handleModalApply() {
-    if (!modalKey) return;
-    const combined = buildModalInput(modalKey, {
-      prompt: modalPrompt,
-      context: modalContext
+    if (!modalVoiceId) return;
+    const combined = buildModalInput(modalVoiceId, {
+      scenario: modalScenario
     });
-    handleApply(modalKey, combined);
+    handleApply(modalVoiceId, combined);
     closeModal();
   }
 
+  function handleScenarioPresetClick(scenario: string) {
+    if (modalOpen) {
+      setModalScenario(scenario);
+      setScenarioPickerOpen(false);
+      setStatus("Scenario loaded.");
+      return;
+    }
+    const el = getActiveInput();
+    if (!el) {
+      setStatus("Open a voice or click inside the chat box first.");
+      return;
+    }
+    writeValue(el, scenario);
+    setStatus("Scenario pasted.");
+  }
+
   const host = window.location.host;
-  const modalConfig = modalKey ? getModalConfig(modalKey) : null;
-  const hasFinalNote = Boolean(modalConfig?.finalNote.trim());
-  const maxModalStep = hasFinalNote ? 2 : 1;
+  const modalConfig = modalVoiceId ? getModalConfig(modalVoiceId) : null;
+  const modalVoice = modalVoiceId ? getVoice(modalVoiceId) : null;
   const theme =
     host.includes("claude.ai") ? "psx-theme-claude" : "psx-theme-chatgpt";
   const tone = isDark ? "psx-dark" : "psx-light";
@@ -326,23 +350,26 @@ export default function App() {
         className="psx-tab"
         onClick={toggleOpen}
         onPointerDown={startDrag}
-        aria-label="Open PromptFix sidebar"
-        title="PromptFix"
+        aria-label="Open Absurdly sidebar"
+        title="Absurdly"
       >
-        <span className="psx-tab-logo" aria-hidden="true">PF</span>
+        <span className="psx-tab-logo" aria-hidden="true">AB</span>
       </div>
       <div className="psx-shell">
         <div
           className="psx-header"
           onPointerDown={startDrag}
         >
-          <div className="psx-title">PromptFix</div>
+          <div className="psx-title">Absurdly</div>
           <div className="psx-header-actions">
+            <button className="psx-header-btn" onClick={openHelp}>
+              How It Works
+            </button>
             <button className="psx-header-btn" onClick={handleUpgrade}>
-              Unlock Pro
+              Unlock Voices
             </button>
             <button
-              className="psx-close"
+              className="psx-close psx-close-icon"
               onClick={() => {
                 closeModal();
                 if (isOpen) {
@@ -350,115 +377,124 @@ export default function App() {
                 }
                 closeHelp();
               }}
+              aria-label="Minimize"
+              title="Minimize"
             >
-              Minimize
+              <svg
+                aria-hidden="true"
+                viewBox="0 0 24 24"
+                className="psx-close-svg"
+              >
+                <path
+                  d="M6.4 6.4L17.6 17.6M17.6 6.4L6.4 17.6"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.9"
+                  strokeLinecap="round"
+                />
+              </svg>
             </button>
           </div>
         </div>
 
         <div className="psx-body">
-          <div className="psx-section">
-            <div className="psx-section-title">Buttons</div>
-            <div className="psx-buttons">
-              <button className="psx-btn psx-secondary" onClick={openHelp}>
-                How to Use
-              </button>
-              {allButtons.map(({ key, locked }) => (
-                <button
-                  key={key}
-                  className={`psx-btn ${locked ? "psx-locked" : ""}`}
-                  onClick={() =>
-                    locked ? setStatus("Upgrade to unlock.") : openModal(key)
-                  }
-                >
-                  {getLabel(key)}
+          {helpOpen ? (
+            <div className="psx-section psx-help-section">
+              <div className="psx-help-header">
+                <div className="psx-section-title">How It Works</div>
+                <button className="psx-modal-close" onClick={closeHelp}>
+                  Close
                 </button>
-              ))}
+              </div>
+              <div className="psx-modal-question">
+                Absurdly rewrites your prompt. It does not send messages for you.
+              </div>
+              <div className="psx-help-list">
+                {howToUseSteps.map((step, index) => (
+                  <div key={step} className="psx-help-item">
+                    <span className="psx-help-index">{index + 1}</span>
+                    <span>{step}</span>
+                  </div>
+                ))}
+              </div>
             </div>
-            <div className="psx-status">{status}</div>
-          </div>
+          ) : (
+            <div className="psx-section">
+              <div className="psx-section-title">Voices</div>
+              <div className="psx-buttons">
+                {allVoices.map(({ voice, locked }) => (
+                  <button
+                    key={voice.id}
+                    className={`psx-btn ${locked ? "psx-locked" : ""}`}
+                    onClick={() =>
+                      locked ? setStatus("Unlock paid voices to use this one.") : openModal(voice.id)
+                    }
+                  >
+                    <span className="psx-btn-label">{voice.label}</span>
+                    <span className="psx-btn-subtitle">{voice.inspiredBy}</span>
+                  </button>
+                ))}
+              </div>
+              <div className="psx-status">{status}</div>
+            </div>
+          )}
         </div>
-        {modalOpen && modalKey && (
+        {modalOpen && modalVoiceId && modalVoice && (
           <div className="psx-modal-backdrop">
             <div className="psx-modal">
               <div className="psx-modal-header">
-                <div className="psx-modal-title">{getLabel(modalKey)}</div>
+                <div>
+                  <div className="psx-modal-title">{modalVoice.label}</div>
+                  <div className="psx-modal-subtitle">{modalVoice.inspiredBy}</div>
+                </div>
                 <button className="psx-modal-close" onClick={closeModal}>
                   Cancel
                 </button>
               </div>
               <div className="psx-modal-body">
-                {modalStep === 0 && (
-                  <>
-                    <div className="psx-modal-question">
-                      {modalConfig?.step1}
-                    </div>
-                    <textarea
-                      className="psx-modal-input"
-                      placeholder="Type here..."
-                      value={modalPrompt}
-                      onChange={(e) => setModalPrompt(e.target.value)}
-                    />
-                  </>
-                )}
-                {modalStep === 1 && (
-                  <>
-                    <div className="psx-modal-question">
-                      {modalConfig?.step2}
-                    </div>
-                    <textarea
-                      className="psx-modal-input"
-                      placeholder="Optional but helpful..."
-                      value={modalContext}
-                      onChange={(e) => setModalContext(e.target.value)}
-                    />
-                  </>
-                )}
-                {modalStep === 2 && hasFinalNote && (
-                  <div className="psx-modal-reminder">
-                    {modalConfig?.finalNote}
-                  </div>
-                )}
+                <div className="psx-modal-question">
+                  {modalConfig?.step1}
+                </div>
+                <textarea
+                  className="psx-modal-input"
+                  placeholder="Describe the ridiculous premise..."
+                  value={modalScenario}
+                  onChange={(e) => setModalScenario(e.target.value)}
+                />
               </div>
               <div className="psx-modal-actions">
-                {modalStep < maxModalStep ? (
+                <div className="psx-scenario-picker">
                   <button
-                    className="psx-btn psx-primary"
-                    onClick={handleModalNext}
-                    disabled={modalStep === 0 && !modalPrompt.trim()}
+                    className="psx-btn psx-secondary"
+                    onClick={() => setScenarioPickerOpen((open) => !open)}
                   >
-                    Next
+                    Scenarios
                   </button>
-                ) : (
-                  <button className="psx-btn psx-primary" onClick={handleModalApply}>
-                    Apply Prompt
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-        {helpOpen && (
-          <div className="psx-modal-backdrop">
-            <div className="psx-modal">
-              <div className="psx-modal-header">
-                <div className="psx-modal-title">How to Use</div>
-                <button className="psx-modal-close" onClick={closeHelp}>
-                  Close
-                </button>
-              </div>
-              <div className="psx-modal-body">
-                <div className="psx-modal-question">
-                  PromptFix does not send messages for you. It only rewrites the text in the chat box.
-                </div>
-                <div className="psx-help-list">
-                  {howToUseSteps.map((step, index) => (
-                    <div key={step} className="psx-help-item">
-                      <span className="psx-help-index">{index + 1}</span>
-                      <span>{step}</span>
+                  {scenarioPickerOpen && (
+                    <div className="psx-scenario-popover">
+                      <div className="psx-scenario-popover-title">Known Funny Scenarios</div>
+                      <div className="psx-scenarios">
+                        {scenarioPresets.map((scenario) => (
+                          <button
+                            key={scenario}
+                            className="psx-scenario"
+                            onClick={() => handleScenarioPresetClick(scenario)}
+                            title="Load into this voice"
+                          >
+                            {scenario}
+                          </button>
+                        ))}
+                      </div>
                     </div>
-                  ))}
+                  )}
                 </div>
+                <button
+                  className="psx-btn psx-primary"
+                  onClick={handleModalApply}
+                  disabled={!modalScenario.trim()}
+                >
+                  Apply Prompt
+                </button>
               </div>
             </div>
           </div>

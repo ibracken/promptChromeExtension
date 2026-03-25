@@ -14,21 +14,21 @@ function Options() {
       }
       const next = Boolean(res?.premium);
       setPremium(next);
-      setStatus(res?.error || (next ? "Pro unlocked" : "Free tier"));
+      setStatus(res?.error || (next ? "All voices unlocked" : "Flagship free"));
     });
   }
 
   function openPayment() {
     chrome.runtime.sendMessage({ type: "OPEN_PAYMENT" }, (res) => {
       if (chrome.runtime.lastError) {
-        setStatus("Unable to open support page right now.");
+        setStatus("Unable to open unlock page right now.");
         return;
       }
       if (res?.ok === false) {
-        setStatus(res.error || "Unable to open support page right now.");
+        setStatus(res.error || "Unable to open unlock page right now.");
         return;
       }
-      setStatus("Support page opened.");
+      setStatus("Unlock page opened.");
     });
   }
 
@@ -38,21 +38,21 @@ function Options() {
 
   return (
     <div className="wrap">
-      <h1>PromptFix Settings</h1>
+      <h1>Absurdly Voice Settings</h1>
       <div className="card">
         <div className="row">
-          <strong>Current plan:</strong> {premium ? "Pro" : "Free"}
+          <strong>Current plan:</strong> {premium ? "All Voices" : "Flagship Free"}
         </div>
         <div className="hint">{status}</div>
       </div>
       <div className="card">
         <button className="btn primary" onClick={openPayment}>
-          Support PromptFix
+          Unlock More Voices
         </button>
         <button className="btn" onClick={checkLicense}>
-          Check License
+          Refresh Access
         </button>
-        <div className="hint">Use support to help fund development. Check License refreshes your current plan.</div>
+        <div className="hint">The free plan includes the flagship deadpan voice. Unlock adds the full comedy lineup.</div>
       </div>
     </div>
   );

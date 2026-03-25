@@ -4,9 +4,9 @@ import { crx } from "@crxjs/vite-plugin";
 
 const manifest = {
   manifest_version: 3,
-  name: "PromptFix",
-  version: "0.1.4",
-  description: "Upgrade prompts inside ChatGPT and Claude with one click.",
+  name: "Absurdly",
+  version: "0.2.2",
+  description: "Turn absurd scenarios into deadpan comedy prompts inside ChatGPT and Claude.",
   permissions: ["storage"],
   host_permissions: [
     "https://chat.openai.com/*",
@@ -28,14 +28,14 @@ const manifest = {
     }
   ],
   action: {
-    default_title: "PromptFix",
+    default_title: "Absurdly",
     default_popup: "src/popup/index.html"
   },
   options_page: "src/options/index.html",
   icons: {
     "16": "src/assets/icon16.png",
     "48": "src/assets/icon48.png",
-    "128": "src/assets/icon128.png"
+    "128": "absurdly_icon_128.png"
   }
 } as const;
 

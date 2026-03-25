@@ -9,13 +9,13 @@ function Popup() {
 
   return (
     <div className="popup">
-      <div className="title">PromptFix</div>
-      <div className="subtitle">Upgrade prompts inside ChatGPT and Claude.</div>
+      <div className="title">Absurdly</div>
+      <div className="subtitle">Turn ridiculous scenarios into deadpan comedy prompts.</div>
       <button className="btn" onClick={() => chrome.runtime.openOptionsPage()}>
-        Settings
+        Voice Settings
       </button>
       <button className="btn primary" onClick={openSupport}>
-        Support PromptFix
+        Unlock More Voices
       </button>
     </div>
   );
