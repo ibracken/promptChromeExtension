@@ -101,9 +101,9 @@ export default function App() {
   const allVoices = useMemo(() => {
     return [
       ...freeVoiceIds.map((id) => ({ voice: getVoice(id), locked: false })),
-      ...paidVoiceIds.map((id) => ({ voice: getVoice(id), locked: false }))
+      ...paidVoiceIds.map((id) => ({ voice: getVoice(id), locked: !isPremium }))
     ];
-  }, []);
+  }, [isPremium]);
 
   const scenarioPresets = useMemo(() => parseScenarioList(scenariosMarkdown), []);
 

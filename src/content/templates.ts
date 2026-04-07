@@ -60,7 +60,7 @@ function buildComedyPrompt(options: {
 const voices: Record<VoiceId, VoiceConfig> = {
   randall_deadpan: {
     id: "randall_deadpan",
-    tier: "paid",
+    tier: "free",
     label: "Deadpan Lab",
     inspiredBy: "Inspired by Randall Munroe",
     description: "Treat a ridiculous premise like a real whiteboard problem.",
@@ -73,18 +73,14 @@ const voices: Record<VoiceId, VoiceConfig> = {
         "Constraints:",
         "Use at least one concrete number.",
         "Include at least one dry, understated aside.",
-        "Use medium-short paragraphs.",
-        "Avoid textbook tone and formal transitions.",
-        "No em dashes.",
+        "Add at least one absurd but concrete comparison.",
+        "No em dashes or emojis.",
         "Keep under 300 words.",
-        "Tone: Curious, slightly analytical, mildly amused.",
-        "Sounds like someone explaining something on a whiteboard.",
+        "Tone: Curiosity with a playful and slightly derailed attitude.",
+        "Sounds like someone calmly overcommitted to explaining something on a whiteboard.",
         "Goofy comparisons and contrasts are encouraged within the flow of the explanation",
-        "Not a history essay.",
-        "Not corporate.",
-        "Not motivational.",
         "Output: Final answer only.",
-        "Question:",
+        "Hypothetical Scenario:",
         input.trim()
       ])
   },
@@ -100,28 +96,19 @@ const voices: Record<VoiceId, VoiceConfig> = {
     build: (input) =>
       joinPromptParts([
         "Answer the scenario in the style of Dave Barry.",
-        "Write it like a newspaper humor column from someone who knows this is ridiculous and is delighted by that fact.",
-        "Treat the absurd premise seriously enough and have the reasoning itself create the comedy.",
-        "Do not turn this into a generic joke list, stand-up routine, or pun barrage.",
-        "Follow the scenario all the way through with concrete consequences and amusing specifics.",
-        "Stay on the exact topic the user gave you.",
-        "",
-        "Output rules:",
-        "- Open with a blunt claim or observation that frames the scenario as obviously unwise.",
-        "Walk through the consequences step by step as if this is an everyday situation that has gotten completely out of control and nobody seems concerned enough.",        "- End by landing on a clean final image or line, not a moral.",
-        "- Tone: observant, mock-serious, and increasingly alarmed in a cheerful way.",
-        "Goofy comparisons and contrasts are encouraged within the flow of the explanation",
-        "",
-        "- No em dashes.",
+        "Write it like an excerpt from Bad Habits where he knows this is ridiculous and is delighted by that fact.",
+        "Spend very little time explaining the premise and most of the answer describing what actually happens because of it.",
+        "- Open with a Title for the piece with appropriate formatting",
+        "- Tone: personally exasperated, and increasingly alarmed in a cheerful way.",
+        "- No em dashes or emojis.",
         "- Output: Final answer only.",
-        "",
-        "Scenario:",
+        "Hypothetical Scenario:",
         input.trim()
       ])
   },
   ricky_gervais: {
     id: "ricky_gervais",
-    tier: "paid",
+    tier: "free",
     label: "Cynical Chap",
     inspiredBy: "Inspired by Ricky Gervais",
     description: "Treat a ridiculous premise like an obvious human failure.",
@@ -131,26 +118,23 @@ const voices: Record<VoiceId, VoiceConfig> = {
     build: (input) =>
       joinPromptParts([
         "Answer the question in the style of Ricky Gervais.",
-        "Constraints:",
-        "Use at least one concrete number.",
-        "Include at least one dry, understated aside.",
-        "Use medium-short paragraphs.",
-        "Avoid textbook tone and formal transitions.",
-        "No em dashes.",
+        "Speak like someone instantly annoyed that this scenario even exists, but amused by how stupid it is.",
+        "This should feel like the comedian talking through an obvious human failure, not like an essay or whiteboard explanation.",
+        "Start with an immediate judgment, not scene-setting.",
+        "Keep pushing on the hypocrisy, laziness, ego, or stupidity inside the premise.",
+        "Use at least one concrete example.",
+        "No em dashes or emojis.",
         "Keep under 300 words.",
-        "Tone: Cynical, slightly analytical, mildly amused.",
-        "Goofy comparisons and contrasts are encouraged within the flow of the explanation",
-        "Not a history essay.",
-        "Not corporate.",
-        "Not motivational.",
+        "Tone: Blunt, cynical, and intrigued.",
+        "Goofy comparisons and contrasts are encouraged within the flow of the explanation.",
         "Output: Final answer only.",
-        "Question:",
+        "Hypothetical Scenario:",
         input.trim()
       ])
   },
   shane_gillis: {
     id: "shane_gillis",
-    tier: "paid",
+    tier: "free",
     label: "Bad Takes",
     inspiredBy: "Inspired by Shane Gillis",
     description: "Treat a ridiculous premise with blunt, casual confidence.",
@@ -160,29 +144,29 @@ const voices: Record<VoiceId, VoiceConfig> = {
     build: (input) =>
       joinPromptParts([
         "Answer the question in the style of Shane Gillis.",
-        "Constraints:",
-        "Include at least one dry, understated aside.",
-        "Use medium-short paragraphs.",
-        "Avoid textbook tone and formal transitions.",
-        "No em dashes.",
-        "The first sentence should sound like an immediate opinion, not a description.",
-        "Keep under 300 words.",
-        "Tone: Bro-ey, like a comedian rambling into a microphone",
-        "Sounds like someone talking through a ridiculous situation out loud.",
-        "Stay inside the scenario and treat it like a real problem, but do not feel the need to give a moral or responsible conclusion.",
-        "Goofy comparisons and contrasts are encouraged within the flow of the explanation",
-        "Not a history essay.",
-        "Not corporate.",
-        "Not motivational.",
+        "It should sound like a comedian informally talking through a ridiculous situation out loud.",
+        "Start with an immediate opinion, not an explanation.",
+        "Keep under 250 words.",
+        "Use blunt, casual language and let the logic wander a little before landing.",
+        "The comedy should come from confident, half-reasonable escalation.",
+        "Include at least one concrete detail or example.",
+        "No em dashes or emojis.",
+        "Tone: Bro-ey, casual, and confident, like a comedian rambling into a microphone.",
+        "Goofy comparisons and contrasts are encouraged within the flow of the explanation.",
         "Output: Final answer only.",
-        "Question:",
+        "Hypothetical Scenario:",
         input.trim()
       ])
   }
 };
 
-export const freeVoiceIds: VoiceId[] = ["dave_barry"];
-export const paidVoiceIds: VoiceId[] = ["randall_deadpan", "ricky_gervais", "shane_gillis"];
+export const freeVoiceIds: VoiceId[] = [
+  "shane_gillis",
+  "randall_deadpan",
+  "dave_barry",
+  "ricky_gervais"
+];
+export const paidVoiceIds: VoiceId[] = [];
 
 export function getVoice(id: VoiceId) {
   return voices[id];
