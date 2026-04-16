@@ -4,10 +4,11 @@
   max-height: clamp(420px, 70vh, 620px);
   /* background: rgba(245, 245, 247, 0.72); */
   color: #1c1c1e;
+  font-size: 14px;
   /* border: 1px solid rgba(229, 229, 234, 0.8);
   border-radius: 18px; */
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.12);
-  font-family: inherit;
+  font-family: "Segoe UI", "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
   pointer-events: auto;
   backdrop-filter: blur(10px) saturate(140%);
 }
@@ -90,12 +91,14 @@
   font-size: 14px;
   font-weight: 700;
   letter-spacing: 0.35px;
+  white-space: nowrap;
 }
 
 .psx-header-actions {
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-shrink: 0;
 }
 
 .psx-header-btn,
@@ -108,8 +111,10 @@
   cursor: pointer;
   font-size: 12px;
   font-weight: 600;
+  line-height: 1.15;
   letter-spacing: 0.2px;
   transition: background 120ms ease, color 120ms ease, transform 120ms ease;
+  white-space: nowrap;
 }
 
 .psx-header-btn:hover,
@@ -420,7 +425,6 @@
   color: #0f172a;
   border-color: #e5e7eb;
   box-shadow: 0 16px 40px rgba(15, 23, 42, 0.12);
-  font-family: var(--default-font-family, "Inter", "ui-sans-serif", "-apple-system", "system-ui", "Segoe UI", "Helvetica", "Arial", "sans-serif");
 }
 
 .psx-theme-chatgpt .psx-header {
@@ -606,7 +610,6 @@
   color: #1f1f1f;
   border-color: #e6ded4;
   box-shadow: 0 16px 40px rgba(31, 31, 31, 0.14);
-  font-family: var(--default-font-family, "Styrene B", "ui-sans-serif", "-apple-system", "system-ui", "Segoe UI", "Helvetica", "Arial", "sans-serif");
 }
 
 .psx-theme-claude .psx-header {
@@ -790,6 +793,191 @@
 .psx-theme-claude.psx-dark .psx-modal-close {
   border-color: #5f5346;
   color: #e8ddd1;
+}
+
+
+.psx-theme-grok {
+  background: rgba(250, 251, 255, 0.8);
+  color: #111827;
+  border-color: #dbe3f0;
+  box-shadow: 0 16px 40px rgba(17, 24, 39, 0.14);
+}
+
+.psx-theme-grok .psx-header {
+  background: #f8fafc;
+  border-bottom-color: #dbe3f0;
+}
+
+.psx-theme-grok .psx-section {
+  background: #ffffff;
+  border-color: #dbe3f0;
+}
+
+.psx-theme-grok .psx-btn {
+  background: #ffffff;
+  border-color: #dbe3f0;
+  color: #111827;
+}
+
+.psx-theme-grok .psx-scenario {
+  background: #ffffff;
+  border-color: #dbe3f0;
+  color: #111827;
+}
+
+.psx-theme-grok .psx-btn:hover {
+  border-color: #c4d0e1;
+}
+
+.psx-theme-grok .psx-scenario:hover {
+  border-color: #c4d0e1;
+}
+
+.psx-theme-grok .psx-btn.psx-secondary {
+  background: #eef4ff;
+  border-color: #c7d7f7;
+  color: #1e3a8a;
+}
+
+.psx-theme-grok .psx-btn-subtitle {
+  color: #64748b;
+}
+
+.psx-theme-grok .psx-header-btn,
+.psx-theme-grok .psx-close {
+  color: #475569;
+}
+
+.psx-theme-grok .psx-header-btn:hover,
+.psx-theme-grok .psx-close:hover {
+  background: #edf2f7;
+  color: #0f172a;
+}
+
+.psx-theme-grok .psx-tab {
+  background: transparent;
+  color: #0f172a;
+}
+
+.psx-theme-grok .psx-modal {
+  background: #ffffff;
+  border-color: #dbe3f0;
+}
+
+.psx-theme-grok .psx-scenario-popover {
+  background: #ffffff;
+  border-color: #dbe3f0;
+}
+
+.psx-theme-grok .psx-modal-reminder {
+  background: #f8fafc;
+  border-color: #dbe3f0;
+}
+
+.psx-theme-grok.psx-dark {
+  background: rgba(15, 23, 42, 0.88);
+  color: #e5edf8;
+  border-color: rgba(71, 85, 105, 0.72);
+  box-shadow: 0 16px 40px rgba(2, 6, 23, 0.5);
+}
+
+.psx-theme-grok.psx-dark .psx-header {
+  background: rgba(15, 23, 42, 0.96);
+  border-bottom-color: rgba(71, 85, 105, 0.72);
+}
+
+.psx-theme-grok.psx-dark .psx-section {
+  background: rgba(30, 41, 59, 0.92);
+  border-color: rgba(71, 85, 105, 0.72);
+  box-shadow: none;
+}
+
+.psx-theme-grok.psx-dark .psx-section-title,
+.psx-theme-grok.psx-dark .psx-status,
+.psx-theme-grok.psx-dark .psx-modal-question {
+  color: #93a4ba;
+}
+
+.psx-theme-grok.psx-dark .psx-btn {
+  background: #162033;
+  border-color: #334155;
+  color: #e2e8f0;
+}
+
+.psx-theme-grok.psx-dark .psx-scenario {
+  background: #162033;
+  border-color: #334155;
+  color: #e2e8f0;
+}
+
+.psx-theme-grok.psx-dark .psx-btn:hover {
+  border-color: #475569;
+}
+
+.psx-theme-grok.psx-dark .psx-scenario:hover {
+  border-color: #475569;
+}
+
+.psx-theme-grok.psx-dark .psx-btn.psx-secondary {
+  background: #1e3a8a;
+  border-color: #2563eb;
+  color: #dbeafe;
+}
+
+.psx-theme-grok.psx-dark .psx-btn-subtitle,
+.psx-theme-grok.psx-dark .psx-modal-subtitle,
+.psx-theme-grok.psx-dark .psx-scenario-popover-title {
+  color: #93a4ba;
+}
+
+.psx-theme-grok.psx-dark .psx-help-index {
+  background: #1e3a8a;
+  color: #dbeafe;
+}
+
+.psx-theme-grok.psx-dark .psx-header-btn,
+.psx-theme-grok.psx-dark .psx-close {
+  color: #cbd5e1;
+}
+
+.psx-theme-grok.psx-dark .psx-header-btn:hover,
+.psx-theme-grok.psx-dark .psx-close:hover {
+  background: rgba(51, 65, 85, 0.92);
+  color: #f8fafc;
+}
+
+.psx-theme-grok.psx-dark .psx-tab {
+  background: transparent;
+  color: #f8fafc;
+  box-shadow: none;
+}
+
+.psx-theme-grok.psx-dark .psx-modal {
+  background: #0f172a;
+  border-color: #334155;
+  color: #e2e8f0;
+}
+
+.psx-theme-grok.psx-dark .psx-scenario-popover {
+  background: #0f172a;
+  border-color: #334155;
+}
+
+.psx-theme-grok.psx-dark .psx-modal-input {
+  background: #111827;
+  color: #e2e8f0;
+  border-color: #334155;
+}
+
+.psx-theme-grok.psx-dark .psx-modal-reminder {
+  background: #111827;
+  color: #cbd5e1;
+  border-color: #334155;
+}
+
+.psx-theme-grok.psx-dark .psx-modal-close {
+  border-color: #334155;
+  color: #cbd5e1;
 }
 
 

@@ -8,30 +8,6 @@ const rootId = "prompt-sidebar-root";
 let appRoot: Root | null = null;
 let mountScheduled = false;
 
-function getHostFontContext() {
-  const body = document.body;
-  if (!body) {
-    return {
-      color: "",
-      fontFamily: "",
-      fontSize: ""
-    };
-  }
-
-  const bodyStyle = window.getComputedStyle(body);
-  const inputEl =
-    (document.querySelector("div[contenteditable='true'][data-testid='chat-input']") ||
-      document.querySelector("div#prompt-textarea.ProseMirror[contenteditable='true']") ||
-      document.querySelector("textarea#prompt-textarea")) as HTMLElement | null;
-  const inputStyle = inputEl ? window.getComputedStyle(inputEl) : null;
-
-  return {
-    color: bodyStyle.color,
-    fontFamily: inputStyle?.fontFamily || bodyStyle.fontFamily,
-    fontSize: inputStyle?.fontSize || bodyStyle.fontSize
-  };
-}
-
 function ensureHost() {
   if (!document.documentElement || !document.body) {
     return null;
@@ -51,11 +27,6 @@ function ensureHost() {
     host.style.zIndex = "2147483647";
     document.documentElement.appendChild(host);
   }
-
-  const fontContext = getHostFontContext();
-  host.style.fontFamily = fontContext.fontFamily;
-  host.style.color = fontContext.color;
-  host.style.fontSize = fontContext.fontSize;
 
   return host;
 }
@@ -119,13 +90,7 @@ const observer = new MutationObserver(() => {
   const host = document.getElementById(rootId);
   if (!host || !document.body) {
     scheduleMount();
-    return;
   }
-
-  const fontContext = getHostFontContext();
-  host.style.fontFamily = fontContext.fontFamily;
-  host.style.color = fontContext.color;
-  host.style.fontSize = fontContext.fontSize;
 });
 
 observer.observe(document.documentElement, {

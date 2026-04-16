@@ -28,40 +28,11 @@ function joinPromptParts(parts: string[]) {
   return parts.join("\n");
 }
 
-function buildComedyPrompt(options: {
-  voice: string;
-  opening: string;
-  tone: string;
-  structure: string[];
-  constraints?: string[];
-  maxWords?: number;
-  input: string;
-}) {
-  const parts = [
-    `Answer the scenario in the style of ${options.voice}.`,
-    options.opening,
-    "Treat the absurd premise seriously enough that the reasoning itself creates the comedy.",
-    "Do not turn this into a generic joke list, stand-up routine, or pun barrage.",
-    "Follow the scenario all the way through with concrete consequences and specifics.",
-    "",
-    "Output rules:",
-    ...options.structure.map((rule) => `- ${rule}`),
-    `- Tone: ${options.tone}.`,
-    ...(options.constraints ?? []).map((rule) => `- ${rule}`),
-    ...(options.maxWords ? [`- Keep under ${options.maxWords} words.`] : []),
-    "- Output: Final answer only.",
-    "",
-    "Scenario:",
-    options.input.trim()
-  ];
-  return joinPromptParts(parts);
-}
-
 const voices: Record<VoiceId, VoiceConfig> = {
   randall_deadpan: {
     id: "randall_deadpan",
-    tier: "free",
-    label: "Deadpan Lab",
+    tier: "paid",
+    label: "Science Guy",
     inspiredBy: "Inspired by Randall Munroe",
     description: "Treat a ridiculous premise like a real whiteboard problem.",
     modal: {
@@ -70,15 +41,11 @@ const voices: Record<VoiceId, VoiceConfig> = {
     build: (input) =>
       joinPromptParts([
         "Answer the question in the style of Randall Munroe from xkcd and What If.",
-        "Constraints:",
-        "Use at least one concrete number.",
-        "Include at least one dry, understated aside.",
-        "Add at least one absurd but concrete comparison.",
+        "Treat the absurd premise like a real problem and follow the logic with calm, curious seriousness.",
+        "Sound like someone explaining it on a whiteboard, using concrete details, scale, and matter-of-fact reasoning to make the absurdity feel oddly plausible.",
+        "Let the humor come from precise overthinking and the occasional dry understatement, not from joke writing.",
         "No em dashes or emojis.",
-        "Keep under 300 words.",
-        "Tone: Curiosity with a playful and slightly derailed attitude.",
-        "Sounds like someone calmly overcommitted to explaining something on a whiteboard.",
-        "Goofy comparisons and contrasts are encouraged within the flow of the explanation",
+        "Tone: Curious, matter-of-fact, and slightly overcommitted.",
         "Output: Final answer only.",
         "Hypothetical Scenario:",
         input.trim()
@@ -86,8 +53,8 @@ const voices: Record<VoiceId, VoiceConfig> = {
   },
   dave_barry: {
     id: "dave_barry",
-    tier: "free",
-    label: "Chaos Column",
+    tier: "paid",
+    label: "Newspaper Guy",
     inspiredBy: "Inspired by Dave Barry",
     description: "Escalate a bad idea with confident, newspaper-column energy.",
     modal: {
@@ -101,6 +68,7 @@ const voices: Record<VoiceId, VoiceConfig> = {
         "- Open with a Title for the piece with appropriate formatting",
         "- Tone: personally exasperated, and increasingly alarmed in a cheerful way.",
         "- No em dashes or emojis.",
+        "- Limit your response to 500 words but feel free to have it be less",
         "- Output: Final answer only.",
         "Hypothetical Scenario:",
         input.trim()
@@ -108,8 +76,8 @@ const voices: Record<VoiceId, VoiceConfig> = {
   },
   ricky_gervais: {
     id: "ricky_gervais",
-    tier: "free",
-    label: "Cynical Chap",
+    tier: "paid",
+    label: "Cynical Jerk",
     inspiredBy: "Inspired by Ricky Gervais",
     description: "Treat a ridiculous premise like an obvious human failure.",
     modal: {
@@ -124,7 +92,6 @@ const voices: Record<VoiceId, VoiceConfig> = {
         "Keep pushing on the hypocrisy, laziness, ego, or stupidity inside the premise.",
         "Use at least one concrete example.",
         "No em dashes or emojis.",
-        "Keep under 300 words.",
         "Tone: Blunt, cynical, and intrigued.",
         "Goofy comparisons and contrasts are encouraged within the flow of the explanation.",
         "Output: Final answer only.",
@@ -135,7 +102,7 @@ const voices: Record<VoiceId, VoiceConfig> = {
   shane_gillis: {
     id: "shane_gillis",
     tier: "free",
-    label: "Bad Takes",
+    label: "Cool Uncle",
     inspiredBy: "Inspired by Shane Gillis",
     description: "Treat a ridiculous premise with blunt, casual confidence.",
     modal: {
@@ -146,7 +113,6 @@ const voices: Record<VoiceId, VoiceConfig> = {
         "Answer the question in the style of Shane Gillis.",
         "It should sound like a comedian informally talking through a ridiculous situation out loud.",
         "Start with an immediate opinion, not an explanation.",
-        "Keep under 250 words.",
         "Use blunt, casual language and let the logic wander a little before landing.",
         "The comedy should come from confident, half-reasonable escalation.",
         "Include at least one concrete detail or example.",
@@ -161,26 +127,23 @@ const voices: Record<VoiceId, VoiceConfig> = {
 };
 
 export const freeVoiceIds: VoiceId[] = [
-  "shane_gillis",
+  "shane_gillis"
+];
+export const paidVoiceIds: VoiceId[] = [
   "randall_deadpan",
   "dave_barry",
   "ricky_gervais"
 ];
-export const paidVoiceIds: VoiceId[] = [];
 
 export function getVoice(id: VoiceId) {
   return voices[id];
-}
-
-export function getAllVoices() {
-  return [...freeVoiceIds, ...paidVoiceIds].map((id) => voices[id]);
 }
 
 export function getModalConfig(id: VoiceId) {
   return voices[id].modal;
 }
 
-export function buildModalInput(id: VoiceId, answers: ModalAnswers) {
+export function buildModalInput(_id: VoiceId, answers: ModalAnswers) {
   return answers.scenario.trim();
 }
 

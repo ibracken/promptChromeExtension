@@ -48,6 +48,18 @@ function findClaudeInput() {
   );
 }
 
+function findGrokInput() {
+  const grokEditors = Array.from(
+    document.querySelectorAll("div.tiptap.ProseMirror[contenteditable='true']")
+  );
+  const visibleGrok = grokEditors.find((el) => isVisible(el));
+  return (
+    visibleGrok ||
+    document.querySelector("form div.tiptap.ProseMirror[contenteditable='true']") ||
+    document.querySelector("div.tiptap.ProseMirror[contenteditable='true']")
+  );
+}
+
 export function getActiveInput(): EditableEl | null {
   const active = document.activeElement;
   if (isEditable(active) && !isInsideExtensionUI(active)) return active;
@@ -59,17 +71,29 @@ export function getActiveInput(): EditableEl | null {
     const editable = parentEl?.closest?.("[contenteditable='true']");
     if (editable && isEditable(editable) && !isInsideExtensionUI(editable)) return editable;
   }
+  const isGrokHost = window.location.host.includes("grok.com");
   const isClaudeHost = window.location.host.includes("claude.ai");
-  if (isClaudeHost) {
+  if (isGrokHost) {
+    const grok = findGrokInput();
+    if (grok && isEditable(grok) && !isInsideExtensionUI(grok)) return grok;
+    const gpt = findChatGPTInput();
+    if (gpt && isEditable(gpt) && !isInsideExtensionUI(gpt)) return gpt;
+    const claude = findClaudeInput();
+    if (claude && isEditable(claude) && !isInsideExtensionUI(claude)) return claude;
+  } else if (isClaudeHost) {
     const claude = findClaudeInput();
     if (claude && isEditable(claude) && !isInsideExtensionUI(claude)) return claude;
     const gpt = findChatGPTInput();
     if (gpt && isEditable(gpt) && !isInsideExtensionUI(gpt)) return gpt;
+    const grok = findGrokInput();
+    if (grok && isEditable(grok) && !isInsideExtensionUI(grok)) return grok;
   } else {
     const gpt = findChatGPTInput();
     if (gpt && isEditable(gpt) && !isInsideExtensionUI(gpt)) return gpt;
     const claude = findClaudeInput();
     if (claude && isEditable(claude) && !isInsideExtensionUI(claude)) return claude;
+    const grok = findGrokInput();
+    if (grok && isEditable(grok) && !isInsideExtensionUI(grok)) return grok;
   }
   const candidates = Array.from(
     document.querySelectorAll("textarea, input[type='text'], div[contenteditable='true']")
@@ -82,7 +106,6 @@ export function getActiveInput(): EditableEl | null {
     })
     .sort((a, b) => b.score - a.score);
   return scored[0]?.el ?? null;
-  return null;
 }
 
 export function readValue(el: EditableEl | null) {
@@ -100,15 +123,6 @@ function escapeHtml(value: string) {
     .replaceAll(">", "&gt;")
     .replaceAll("\"", "&quot;")
     .replaceAll("'", "&#39;");
-}
-
-function selectAll(el: HTMLElement) {
-  const range = document.createRange();
-  range.selectNodeContents(el);
-  const selection = window.getSelection();
-  if (!selection) return;
-  selection.removeAllRanges();
-  selection.addRange(range);
 }
 
 function execInsertText(value: string) {
@@ -145,7 +159,7 @@ function selectEditorContents(el: HTMLElement) {
   selection.addRange(range);
 }
 
-function isChatGptProseMirror(el: HTMLElement) {
+function isProseMirrorEditor(el: HTMLElement) {
   if (isClaudeEditor(el)) return false;
   return (
     el.classList.contains("ProseMirror") ||
@@ -189,7 +203,7 @@ export function writeValue(el: EditableEl | null, value: string) {
     if (isClaudeEditor(el)) {
       // Avoid hard DOM rewrites in Claude; they can break the live editor state.
       replaceViaSelection(el, value);
-    } else if (isChatGptProseMirror(el)) {
+    } else if (isProseMirrorEditor(el)) {
       replaceViaSelection(el, value);
       // Keep ProseMirror stable across host variants.
       setProseMirrorValue(el, value);

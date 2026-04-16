@@ -5,13 +5,14 @@ import { crx } from "@crxjs/vite-plugin";
 const manifest = {
   manifest_version: 3,
   name: "Absurdly",
-  version: "0.2.3",
-  description: "Turn absurd scenarios into deadpan comedy prompts inside ChatGPT and Claude.",
+  version: "0.2.6",
+  description: "Turn absurd scenarios into deadpan comedy prompts inside ChatGPT, Claude, and Grok.",
   permissions: ["storage"],
   host_permissions: [
     "https://chat.openai.com/*",
     "https://chatgpt.com/*",
-    "https://claude.ai/*"
+    "https://claude.ai/*",
+    "https://grok.com/*"
   ],
   background: {
     service_worker: "src/background.ts"
@@ -21,7 +22,8 @@ const manifest = {
       matches: [
         "https://chat.openai.com/*",
         "https://chatgpt.com/*",
-        "https://claude.ai/*"
+        "https://claude.ai/*",
+        "https://grok.com/*"
       ],
       js: ["src/content/main.tsx"],
       run_at: "document_idle"

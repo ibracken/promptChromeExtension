@@ -28,6 +28,9 @@ const howToUseSteps = [
   "Send it."
 ];
 
+// Temporary local testing switch. Set back to false before release packaging.
+const FORCE_UNLOCK_ALL_VOICES = true;
+
 function parseScenarioList(markdown: string) {
   return markdown
     .split(/\r?\n/)
@@ -101,7 +104,10 @@ export default function App() {
   const allVoices = useMemo(() => {
     return [
       ...freeVoiceIds.map((id) => ({ voice: getVoice(id), locked: false })),
-      ...paidVoiceIds.map((id) => ({ voice: getVoice(id), locked: !isPremium }))
+      ...paidVoiceIds.map((id) => ({
+        voice: getVoice(id),
+        locked: FORCE_UNLOCK_ALL_VOICES ? false : !isPremium
+      }))
     ];
   }, [isPremium]);
 
@@ -336,8 +342,11 @@ export default function App() {
   const host = window.location.host;
   const modalConfig = modalVoiceId ? getModalConfig(modalVoiceId) : null;
   const modalVoice = modalVoiceId ? getVoice(modalVoiceId) : null;
-  const theme =
-    host.includes("claude.ai") ? "psx-theme-claude" : "psx-theme-chatgpt";
+  const theme = host.includes("claude.ai")
+    ? "psx-theme-claude"
+    : host.includes("grok.com")
+      ? "psx-theme-grok"
+      : "psx-theme-chatgpt";
   const tone = isDark ? "psx-dark" : "psx-light";
 
   return (

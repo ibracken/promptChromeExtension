@@ -14,7 +14,7 @@ function Options() {
       }
       const next = Boolean(res?.premium);
       setPremium(next);
-      setStatus(res?.error || (next ? "All voices unlocked" : "Flagship free"));
+      setStatus(res?.error || (next ? "All voices unlocked" : "Shane Gillis free"));
     });
   }
 
@@ -41,7 +41,7 @@ function Options() {
       <h1>Absurdly Voice Settings</h1>
       <div className="card">
         <div className="row">
-          <strong>Current plan:</strong> {premium ? "All Voices" : "Flagship Free"}
+          <strong>Current plan:</strong> {premium ? "All Voices" : "Shane Gillis Free"}
         </div>
         <div className="hint">{status}</div>
       </div>
@@ -52,7 +52,7 @@ function Options() {
         <button className="btn" onClick={checkLicense}>
           Refresh Access
         </button>
-        <div className="hint">The free plan includes the flagship deadpan voice. Unlock adds the full comedy lineup.</div>
+        <div className="hint">The free plan includes the Shane Gillis voice. Unlock adds the full comedy lineup.</div>
       </div>
     </div>
   );
