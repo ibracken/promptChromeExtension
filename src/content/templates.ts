@@ -4,23 +4,17 @@ export type VoiceId =
   | "ricky_gervais"
   | "shane_gillis";
 
+export type VoiceOptionId = VoiceId | "none";
+
 type Tier = "free" | "paid";
-
-export type ModalAnswers = {
-  scenario: string;
-};
-
-type ModalConfig = {
-  step1: string;
-};
 
 type VoiceConfig = {
   id: VoiceId;
   tier: Tier;
   label: string;
+  badgeLabel: string;
   inspiredBy: string;
   description: string;
-  modal: ModalConfig;
   build: (input: string) => string;
 };
 
@@ -33,11 +27,9 @@ const voices: Record<VoiceId, VoiceConfig> = {
     id: "randall_deadpan",
     tier: "paid",
     label: "Science Guy",
+    badgeLabel: "Science Guy",
     inspiredBy: "Inspired by Randall Munroe",
     description: "Treat a ridiculous premise like a real whiteboard problem.",
-    modal: {
-      step1: "Paste the weird question, absurd scenario, or topic you want explained."
-    },
     build: (input) =>
       joinPromptParts([
         "Answer the question in the style of Randall Munroe from xkcd and What If.",
@@ -55,11 +47,9 @@ const voices: Record<VoiceId, VoiceConfig> = {
     id: "dave_barry",
     tier: "paid",
     label: "Newspaper Guy",
+    badgeLabel: "Newspaper Guy",
     inspiredBy: "Inspired by Dave Barry",
     description: "Escalate a bad idea with confident, newspaper-column energy.",
-    modal: {
-      step1: "Paste the absurd scenario or question you want analyzed."
-    },
     build: (input) =>
       joinPromptParts([
         "Answer the scenario in the style of Dave Barry.",
@@ -78,11 +68,9 @@ const voices: Record<VoiceId, VoiceConfig> = {
     id: "ricky_gervais",
     tier: "paid",
     label: "Cynical Jerk",
+    badgeLabel: "Cynical Jerk",
     inspiredBy: "Inspired by Ricky Gervais",
     description: "Treat a ridiculous premise like an obvious human failure.",
-    modal: {
-      step1: "Paste the weird question, absurd scenario, or topic you want explained."
-    },
     build: (input) =>
       joinPromptParts([
         "Answer the question in the style of Ricky Gervais.",
@@ -103,11 +91,9 @@ const voices: Record<VoiceId, VoiceConfig> = {
     id: "shane_gillis",
     tier: "free",
     label: "Cool Uncle",
+    badgeLabel: "Cool Uncle",
     inspiredBy: "Inspired by Shane Gillis",
     description: "Treat a ridiculous premise with blunt, casual confidence.",
-    modal: {
-      step1: "Paste the weird question, absurd scenario, or topic you want explained."
-    },
     build: (input) =>
       joinPromptParts([
         "Answer the question in the style of Shane Gillis.",
@@ -137,14 +123,6 @@ export const paidVoiceIds: VoiceId[] = [
 
 export function getVoice(id: VoiceId) {
   return voices[id];
-}
-
-export function getModalConfig(id: VoiceId) {
-  return voices[id].modal;
-}
-
-export function buildModalInput(_id: VoiceId, answers: ModalAnswers) {
-  return answers.scenario.trim();
 }
 
 export function buildPrompt(id: VoiceId, input: string) {

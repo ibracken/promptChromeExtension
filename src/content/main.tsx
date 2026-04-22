@@ -2,15 +2,18 @@ import React from "react";
 import { createRoot, Root } from "react-dom/client";
 import App from "./App";
 import styles from "./styles.css?inline";
+import { resolveSiteAdapter } from "./siteAdapters";
 
 const rootId = "prompt-sidebar-root";
 
 let appRoot: Root | null = null;
+let hostEl: HTMLDivElement | null = null;
+let containerEl: HTMLDivElement | null = null;
 let mountScheduled = false;
 
 function ensureHost() {
-  if (!document.documentElement || !document.body) {
-    return null;
+  if (hostEl?.isConnected && containerEl?.isConnected) {
+    return { host: hostEl, container: containerEl };
   }
 
   let host = document.getElementById(rootId) as HTMLDivElement | null;
@@ -18,20 +21,10 @@ function ensureHost() {
     host = document.createElement("div");
     host.id = rootId;
     host.dataset.absurdlyRoot = "true";
-    host.style.position = "fixed";
-    host.style.left = "0";
-    host.style.top = "0";
-    host.style.width = "0";
-    host.style.height = "0";
-    host.style.pointerEvents = "auto";
-    host.style.zIndex = "2147483647";
-    document.documentElement.appendChild(host);
   }
 
-  return host;
-}
+  host.dataset.host = window.location.host;
 
-function ensureStyle(host: HTMLDivElement) {
   let styleEl = host.querySelector("style[data-absurdly-style='true']") as HTMLStyleElement | null;
   if (!styleEl) {
     styleEl = document.createElement("style");
@@ -39,39 +32,50 @@ function ensureStyle(host: HTMLDivElement) {
     styleEl.textContent = styles;
     host.appendChild(styleEl);
   }
-}
 
-function ensureContainer(host: HTMLDivElement) {
   let container = host.querySelector("div[data-absurdly-container='true']") as HTMLDivElement | null;
   if (!container) {
     container = document.createElement("div");
     container.dataset.absurdlyContainer = "true";
-    container.style.position = "fixed";
-    container.style.left = "0";
-    container.style.top = "0";
-    container.style.width = "0";
-    container.style.height = "0";
-    container.style.pointerEvents = "auto";
     host.appendChild(container);
   }
-  return container;
+
+  hostEl = host;
+  containerEl = container;
+  return { host, container };
 }
 
 function mountExtension() {
   mountScheduled = false;
 
-  const host = ensureHost();
-  if (!host) {
+  if (!document.body) {
+    scheduleMount();
     return;
   }
 
-  ensureStyle(host);
-  const container = ensureContainer(host);
+  const target = resolveSiteAdapter().findMountTarget();
+  if (!target) {
+    scheduleMount();
+    return;
+  }
+
+  const previousContainer = containerEl;
+  const { host, container } = ensureHost();
+  const firstChild = target.firstChild;
+  if (!host.isConnected || host.parentElement !== target || host !== firstChild) {
+    target.insertBefore(host, firstChild);
+  }
+
+  if (appRoot && previousContainer && previousContainer !== container) {
+    appRoot.unmount();
+    appRoot = null;
+  }
 
   if (!appRoot) {
     appRoot = createRoot(container);
     appRoot.render(<App />);
   }
+
 }
 
 function scheduleMount() {
@@ -87,10 +91,7 @@ if (document.readyState === "loading") {
 }
 
 const observer = new MutationObserver(() => {
-  const host = document.getElementById(rootId);
-  if (!host || !document.body) {
-    scheduleMount();
-  }
+  scheduleMount();
 });
 
 observer.observe(document.documentElement, {
@@ -99,3 +100,4 @@ observer.observe(document.documentElement, {
 });
 
 window.addEventListener("pageshow", scheduleMount);
+window.addEventListener("focus", scheduleMount, true);
